@@ -9,6 +9,8 @@
  * @since       1.0
  */
 
+require_once($_SERVER['DOCUMENT_ROOT'] . '/wordpress/wp-content/plugins/custom_support/checkip.php');
+
 // Exit if accessed directly
 if ( ! defined( 'ABSPATH' ) ) exit;
 
@@ -50,8 +52,9 @@ function epl_wp_enqueue_scripts() {
 	wp_register_script( 'epl-front-scripts', $current_dir_path . '/js/jquery-front-scripts.js', array('jquery') , EPL_PROPERTY_VER );
 	
 	if( is_epl_post() && shortcode_exists('listing_map') ) {
-	
+	    if(!checkChinaIP()){
 		wp_enqueue_script('google-map-v-3','https://maps.googleapis.com/maps/api/js?v=3.exp');
+            }
 	}
 	
 	if( isset($epl_settings['epl_use_core_css']) &&  $epl_settings['epl_use_core_css'] == 'on') {

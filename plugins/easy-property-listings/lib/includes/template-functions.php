@@ -109,7 +109,7 @@ function epl_property_archive_featured_image( $image_size = 'epl-image-medium-cr
 					<div class="epl-stickers-wrapper">
 						<?php echo epl_get_price_sticker(); ?>
 					</div>
-					<img src="https://www.hi5fang.com/wordpress/wp-content/uploads/2015/12/no_photo_ph.jpg"/>
+					<img src="/wordpress/wp-content/plugins/custom_support/images/no_photo_ph.jpg"/>
 				</div>
 			</a>
 		</div>

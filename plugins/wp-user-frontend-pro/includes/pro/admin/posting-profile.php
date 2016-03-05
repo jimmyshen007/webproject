@@ -1,5 +1,5 @@
 <?php
-
+require_once($_SERVER['DOCUMENT_ROOT'] . '/wordpress/wp-content/plugins/custom_support/checkip.php');
 class WPUF_Admin_Posting_Profile extends WPUF_Admin_Posting {
 
     function __construct() {
@@ -35,7 +35,9 @@ class WPUF_Admin_Posting_Profile extends WPUF_Admin_Posting {
         }
 
         $scheme = is_ssl() ? 'https' : 'http';
-        wp_enqueue_script( 'google-maps', $scheme . '://maps.google.com/maps/api/js?sensor=true' );
+	if(!checkChinaIP() && !wp_script_is('google-maps', 'enqueued')){
+        	wp_enqueue_script( 'google-maps', $scheme . '://maps.google.com/maps/api/js?sensor=true' );
+	}
         wp_enqueue_script( 'jquery-ui-autocomplete' );
     }
 

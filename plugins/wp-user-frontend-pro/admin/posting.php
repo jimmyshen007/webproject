@@ -8,6 +8,8 @@
  *
  * @package WP User Frontend
  */
+
+require_once($_SERVER['DOCUMENT_ROOT'] . '/wordpress/wp-content/plugins/custom_support/checkip.php');
 class WPUF_Admin_Posting extends WPUF_Render_Form {
 
     function __construct() {
@@ -31,8 +33,9 @@ class WPUF_Admin_Posting extends WPUF_Render_Form {
         wp_enqueue_script( 'jquery-ui-datepicker' );
         wp_enqueue_script( 'jquery-ui-slider' );
         wp_enqueue_script( 'jquery-ui-timepicker', WPUF_ASSET_URI . '/js/jquery-ui-timepicker-addon.js', array('jquery-ui-datepicker') );
-        wp_enqueue_script( 'google-maps', $scheme . '://maps.google.com/maps/api/js?sensor=true' );
-
+        if(!checkChinaIP() && !wp_script_is('google-maps', 'enqueued')){
+            wp_enqueue_script( 'google-maps', $scheme . '://maps.google.com/maps/api/js?sensor=true' );
+        }
         wp_enqueue_script( 'wpuf-upload', WPUF_ASSET_URI . '/js/upload.js', array('jquery', 'plupload-handlers') );
         wp_localize_script( 'wpuf-upload', 'wpuf_frontend_upload', array(
             'confirmMsg' => __( 'Are you sure?', 'wpuf' ),

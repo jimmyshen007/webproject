@@ -3,6 +3,8 @@
  * Add License Key Option
  * @since 2.0
 **/
+require_once($_SERVER['DOCUMENT_ROOT'] . '/wordpress/wp-content/plugins/custom_support/checkip.php');
+
 function epl_am_license_options_filter($fields = null) {
 	$fields[] = array(
 		'label'		=>	'',
@@ -27,7 +29,13 @@ function epl_am_enqueue_scripts() {
 	//Gmap Scripts
 	wp_enqueue_style( 'epl-am-style', EPL_AM_PLUGIN_URL . 'css/style.css', array(), EPL_AM_VERSION);
 	wp_dequeue_script('google-map-v-3');
-	wp_enqueue_script( 'epl-am-map-api', '//maps.googleapis.com/maps/api/js?sensor=false', array('jquery'),EPL_AM_VERSION );
+	if(!checkChinaIP() && !wp_script_is('google-maps', 'enqueued')){
+	    wp_enqueue_script( 'epl-am-map-api', '//maps.googleapis.com/maps/api/js?sensor=false', array('jquery'),EPL_AM_VERSION );
+	}
+	if(checkChinaIP()){
+            wp_enqueue_style( 'mapbox-style', 'https://api.mapbox.com/mapbox.js/v2.3.0/mapbox.css', array(), null);
+            wp_enqueue_script( 'mapbox', 'https://api.mapbox.com/mapbox.js/v2.3.0/mapbox.js', array(), null);
+	}
 	wp_enqueue_script( 'epl-am-gmap', EPL_AM_PLUGIN_URL . 'js/gmap3.min.js', array('epl-am-map-api') ,EPL_AM_VERSION);
 	wp_enqueue_script( 'epl-am-markerclusterer-script', EPL_AM_PLUGIN_URL . 'js/markerclusterer.js', array('epl-am-map-api') ,EPL_AM_VERSION);
 	wp_enqueue_script( 'epl-am-scripts', EPL_AM_PLUGIN_URL . 'js/scripts.js',  array('epl-am-map-api') ,EPL_AM_VERSION);

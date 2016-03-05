@@ -390,7 +390,7 @@ jQuery(document).on('ready',function($){
 		elems.each(function(){
 			if(this.childElementCount == 0){
 				jQuery(this).html('<img width="300" height="200"' +
-					'src="https://www.hi5fang.com/wordpress/wp-content/uploads/2015/12/no_photo_ph-300x200.jpg"' +
+					'src="/wordpress/wp-content/plugins/custom_support/images/no_photo_ph-300x200.jpg"' +
 					'class="teaser-left-thumb wp-post-image" alt="DSC_4841" data-bd-imgshare-binded="1">')
 			}
 		});

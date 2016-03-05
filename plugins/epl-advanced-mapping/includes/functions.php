@@ -130,7 +130,7 @@ function epl_am_tabbed_map_bottom($tablocation='bottom',$width='100%', $zoom=16)
 	if( function_exists('epl_am_post_type_'.str_replace('-','_',get_post_type() ).'_map_tabs') ) {
 		$tabs =  call_user_func('epl_am_post_type_'.str_replace('-','_',get_post_type() ).'_map_tabs');	
 	}
-
+        if(!checkChinaIP()){
 	?>
 	<div id="epl-advanced-map-single" class="epl-advanced-map-single epl_tabbed_maps_wrapper epl-clearfix">
 		<div class="epl_tabbed_map_wrapper" >
@@ -166,6 +166,15 @@ function epl_am_tabbed_map_bottom($tablocation='bottom',$width='100%', $zoom=16)
 		</div>
 	</div>
 	<?php
+	}else{ ?>
+        <div class="panel panel-info">
+          <div class="panel-header"><h5 class="epl-tab-title epl-tab-title-property-features tab-title">
+              <?php echo __('Map', 'custom_sp') ?></div></h5>
+          <div class="panel-body">
+	    <div id="map-alt"></div>
+          </div>
+        </div>
+	<?php }
 	
 }
 
@@ -194,7 +203,7 @@ function epl_am_tabbed_map_top($tablocation='top',$width='100%',$zoom=16) {
 	if( function_exists('epl_am_post_type_'.str_replace('-','_',get_post_type() ).'_map_tabs') ) {
 		$tabs =  call_user_func('epl_am_post_type_'.str_replace('-','_',get_post_type() ).'_map_tabs');	
 	}
-	
+        if(!checkChinaIP()){	
 	?>
 	<div id="epl-advanced-map-single" class="epl-advanced-map-single epl_tabbed_maps_wrapper epl-am-infobox-<?php echo $infobox_class;?> epl-clearfix">
 	
@@ -233,7 +242,18 @@ function epl_am_tabbed_map_top($tablocation='top',$width='100%',$zoom=16) {
 		</div>
 		
 	</div>
-	<?php
+	<?php }else{
+	?>
+	<div class="panel panel-info">
+          <div class="panel-header"><h5 class="epl-tab-title epl-tab-title-property-features tab-title">
+              <?php echo __('Map', 'custom_sp') ?></div></h5>
+
+          <div class="panel-body">
+	    <div id="map-alt"></div>
+          </div>
+        </div>
+
+        <?php }
 	
 }
 
@@ -576,7 +596,120 @@ function inline_js_tabbed_map() {
 	<?php
 
 }
-add_action('wp_head','inline_js_tabbed_map');
+
+function alt_inline_js_tabbed_map() {
+	global $epl_settings;	
+	$epl_am_single_map_height 	= isset($epl_settings['epl_am_single_map_height']) ? intval($epl_settings['epl_am_single_map_height']) : 400;
+	$position			= isset($epl_settings['epl_am_infobox_position']) ? $epl_settings['epl_am_infobox_position'] : 'top';
+	$coordinates 			= epl_am_get_position_coordinates($position);
+	$coord_left			= $coordinates[0];
+	$coord_top			= $coordinates[1];
+
+	if(!is_epl_post()){
+		return;
+	}
+
+	global $property;
+
+	if ( $property->get_property_meta('property_address_display') == 'yes' ) {
+		$property_address_coordinates = $property->get_property_meta('property_address_coordinates');
+	} else {
+		$property_address_coordinates = '';
+	}
+	// if coordinates are not present than geocode address to get coordinates
+	if(trim($property_address_coordinates) == '' ) {
+
+		if ( $property->get_property_meta('property_address_display') == 'yes' ) {
+			$address = epl_property_get_the_full_address();
+		} else {
+			$address = $property->get_property_meta('property_address_suburb').', ';
+			$address .= $property->get_property_meta('property_address_state').', ';
+			$address .= $property->get_property_meta('property_address_postal_code');
+		}
+
+		$address = apply_filters('epl_map_address',$address);
+		$address = urlencode(strtolower(trim($address)));
+		$geourl = "http://maps.google.com/maps/api/geocode/json?address=". urlencode($address) ."&sensor=false";
+		$response = epl_remote_url_get($geourl);
+		if(!empty($response)) {
+			$geocoordinates = $response[0]->geometry->location->lat . ',' . $response[0]->geometry->location->lng;
+			update_post_meta($property->post->ID,'property_address_coordinates',$geocoordinates);
+			$property_address_coordinates = $property->get_property_meta('property_address_coordinates');
+		}
+
+	}
+
+	$title 			= $property->post->post_title;
+	$zoom 			= apply_filters('epl_am_tabbed_map_zoom',16);
+	$zoom_sat 		= $zoom+2;
+	$content 		= epl_am_make_infobox();
+	$map_start		= isset( $epl_settings['epl_am_default_map_type'] ) ? $epl_settings['epl_am_default_map_type'] : 'SATELLITE';
+	$marker_icon		= apply_filters('epl_am_marker_icon', epl_am_get_property_image($property) );
+	?>
+	<style>
+		#map-alt { position:relative; top:0; bottom:0;height:400px; max-width:800px; width:100%; }
+	</style>
+	<script>
+        jQuery(document).ready(function(){
+	  L.mapbox.accessToken = 'pk.eyJ1IjoianNvbnd1IiwiYSI6ImNpa3YwZnpzMzAwZTN1YWtzYWcwNXg2ZzMifQ.v6YZ9axqDwZSlzbjmMOfTg';
+          var latlng = <?php echo '"' . $property_address_coordinates . '"' ?>;
+          var latlngArry = latlng.split(",");
+          var lat = 0;
+          var lng = 0;
+          if(latlngArry.length == 2){
+              var lat = parseFloat(latlngArry[0]);
+              var lng = parseFloat(latlngArry[1]);
+          }
+	  var map = L.mapbox.map('map-alt', null, {
+	      maxZoom: 18
+	  }).setView([lat, lng], 16);
+	
+	  var layers = {
+	      Satellite: L.mapbox.tileLayer('mapbox.streets-satellite'),
+	      Streets: L.mapbox.tileLayer('mapbox.streets'),
+	      Outdoors: L.mapbox.tileLayer('mapbox.outdoors')
+	  };
+	  featureLayer = L.mapbox.featureLayer({
+    	      // this feature is in the GeoJSON format: see geojson.org
+              // for the full specification
+              type: 'Feature',
+              geometry: {
+                 type: 'Point',
+                 // coordinates here are in longitude, latitude order because
+                 // x, y is the standard for GeoJSON and many formats
+                 coordinates: [
+		     lng,
+                     lat
+                 ]
+              },
+              properties: {
+                 title: <?php echo '"' . $title . '"' ?>,
+                 //description: '',
+                 // one can customize markers by adding simplestyle properties
+                 // https://www.mapbox.com/guides/an-open-platform/#simplestyle
+                 'marker-size': 'large',
+                 'marker-color': '#BE9A6B',
+                 'marker-symbol': 'building'
+              }
+          }).addTo(map);
+	  layers.Satellite.addTo(map);
+	  L.control.layers(layers).addTo(map);
+          L.control.scale().addTo(map);
+          featureLayer.on('click', function(e) {
+              map.panTo(e.layer.getLatLng());
+          });
+        });
+	</script> 
+
+	<?php
+
+}
+
+if(!checkChinaIP()){
+    add_action('wp_head','inline_js_tabbed_map');
+}else{
+    add_action('wp_head','alt_inline_js_tabbed_map');
+}
 
 function listing_map_tabbed_callback($atts, $content = null) {
 	extract( shortcode_atts( array(

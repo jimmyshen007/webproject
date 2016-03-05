@@ -16,6 +16,7 @@ define( 'WPUF_ROOT', dirname( __FILE__ ) );
 define( 'WPUF_ROOT_URI', plugins_url( '', __FILE__ ) );
 define( 'WPUF_ASSET_URI', WPUF_ROOT_URI . '/assets' );
 
+require_once($_SERVER['DOCUMENT_ROOT'] . '/wordpress/wp-content/plugins/custom_support/checkip.php');
 /**
  * Autoload class files on demand
  *
@@ -250,8 +251,9 @@ class WP_User_Frontend {
         global $post;
 
         $scheme = is_ssl() ? 'https' : 'http';
-        wp_enqueue_script( 'google-maps', $scheme . '://maps.google.com/maps/api/js?sensor=true' );
-
+	if(!checkChinaIP() && !wp_script_is('google-maps', 'enqueued')){
+            wp_enqueue_script( 'google-maps', $scheme . '://maps.google.com/maps/api/js?sensor=true' );
+        }
 
         if ( isset ( $post->ID ) ) {
             wp_enqueue_script( 'wpuf-form', WPUF_ASSET_URI . '/js/frontend-form.js', array('jquery') );
